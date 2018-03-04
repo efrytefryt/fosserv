@@ -1,0 +1,18 @@
+
+GET
+localhost/characters
+
+GET
+localhost/character/c1704374-4733-44e5-894b-c1e609e32675
+
+PUT
+localhost/character/c1704374-4733-44e5-894b-c1e609e32675
+-body-
+{
+  "id": "c1704374-4733-44e5-894b-c1e609e32675",
+  "name": "raz",
+  "position": {
+    "x": 1,
+    "y": 1
+  }
+}

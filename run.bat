@@ -1,0 +1,1 @@
+go run vector2.go main.go
