@@ -2,6 +2,7 @@
 	{
 		"id": "c1704374-4733-44e5-894b-c1e609e32675",
 		"name": "raz",
+		"isAI": true,
 		"position": {
 			"x": 0,
 			"y": 0
@@ -10,6 +11,7 @@
 	{
 		"id": "f5821059-ebb7-404b-84e5-28034111a90e",
 		"name": "dwa",
+		"isAI": true,
 		"position": {
 			"x": 3,
 			"y": 3
