@@ -1,10 +1,10 @@
 package main
 
 import (
-    "encoding/json"
-    "github.com/gorilla/mux"
-    "log"
-    "net/http"
+	"encoding/json"
+	"github.com/gorilla/mux"
+	"log"
+	"net/http"
 	"time"
 	"fmt"
 	"os"
@@ -20,28 +20,26 @@ type Character struct {
 	TargetPosition *Vector2 `json:"-"`
 }
 func (character Character) String() string {
-    return fmt.Sprintf("ID: %s\nName: %s\nIsAI: %t\nPosition: %s\nTargetPosition %s\n", character.ID, character.Name, *character.IsAI, character.Position, character.TargetPosition)
+	return fmt.Sprintf("ID: %s\nName: %s\nIsAI: %t\nPosition: %s\nTargetPosition %s\n", character.ID, character.Name, *character.IsAI, character.Position, character.TargetPosition)
 }
 
 var gCharacters []Character
 
-func ReadDatabaseFile() {	
-	localCharacters := <- charactersChannel
+func ReadDatabaseFile(aCharacters *[]Character) {
 	jsonFile, err := os.Open("database.json")
 	if err != nil {
 		fmt.Println(err)
-	}	
-	fmt.Println("Successfully Opened users.json")	
-	byteValue, _ := ioutil.ReadAll(jsonFile)	
-	json.Unmarshal(byteValue, &localCharacters)
-	charactersChannel <- localCharacters
+	}
+	fmt.Println("Successfully Opened users.json")
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	json.Unmarshal(byteValue, &aCharacters)
 }
 
 func MoveCharactersGoroutine() {
 	for {
 		MoveCharacters()
 		time.Sleep(100 * time.Millisecond)
-	}	
+	}
 }
 
 func MoveCharacters() {
@@ -54,24 +52,24 @@ func MoveCharacters() {
 				var newTargetPosition Vector2
 				newTargetPosition.X = r.Float64() * 10
 				newTargetPosition.Y = r.Float64() * 10
-				localCharacters[index].TargetPosition = &newTargetPosition		
-	//			fmt.Printf("no target for %d\n", index)			
+				localCharacters[index].TargetPosition = &newTargetPosition
+	//			fmt.Printf("no target for %d\n", index)
 			}
 		} else {
 			direction := Subtract(*character.TargetPosition, *character.Position)
 			Normalize(&direction)
 			var newPosition Vector2
-			newPosition = Add(*character.Position, Multiply(direction, 0.5))	
+			newPosition = Add(*character.Position, Multiply(direction, 0.5))
 
 			*localCharacters[index].Position = newPosition
-			
+
 			distance := Distance(*localCharacters[index].Position, *localCharacters[index].TargetPosition)
 			if distance <= 1 {
 				localCharacters[index].TargetPosition = nil
-			}			
-		}		
+			}
+		}
 	}
-	
+
 	charactersChannel <- localCharacters
 }
 
@@ -93,22 +91,22 @@ func PrintCharacters() {
 
 func GetCharacters(w http.ResponseWriter, r *http.Request) {
 	localCharacters := <- charactersChannel
-    json.NewEncoder(w).Encode(localCharacters)
+	json.NewEncoder(w).Encode(localCharacters)
 	charactersChannel <- localCharacters
 }
 
 func GetCharacter(w http.ResponseWriter, r *http.Request) {
 	localCharacters := <- charactersChannel
-    params := mux.Vars(r)
-    for _, item := range localCharacters {
-        if item.ID == params["id"] {
-            json.NewEncoder(w).Encode(item)
+	params := mux.Vars(r)
+	for _, item := range localCharacters {
+		if item.ID == params["id"] {
+		json.NewEncoder(w).Encode(item)
 			fmt.Printf("-- GetCharacter -- id: %s\n", params["id"])
 			charactersChannel <- localCharacters
-            return
-        }
+			return
+		}
     }
-	
+
 	fmt.Printf("-- GetCharacter -- id: %s NOT FOUND!\n", params["id"])
     json.NewEncoder(w).Encode(&Character{})
 	charactersChannel <- localCharacters
@@ -118,14 +116,14 @@ func PutCharacter(w http.ResponseWriter, r *http.Request) {
 	localCharacters := <- charactersChannel
     params := mux.Vars(r)
     for index, item := range localCharacters {
-        if item.ID == params["id"] {		
+        if item.ID == params["id"] {
 			var character Character
-			_ = json.NewDecoder(r.Body).Decode(&character)		
-			fmt.Printf("-- PutCharacter --\n%s", character)			
+			_ = json.NewDecoder(r.Body).Decode(&character)
+			fmt.Printf("-- PutCharacter --\n%s", character)
 			localCharacters[index] = character
-        }
-    }
-	
+		}
+	}
+
 	charactersChannel <- localCharacters
 }
 
@@ -133,11 +131,11 @@ func PatchCharacter(w http.ResponseWriter, r *http.Request) {
 	localCharacters := <- charactersChannel
     params := mux.Vars(r)
     for index, item := range localCharacters {
-        if item.ID == params["id"] {		
-			var character Character 
-			_ = json.NewDecoder(r.Body).Decode(&character)		
+        if item.ID == params["id"] {
+			var character Character
+			_ = json.NewDecoder(r.Body).Decode(&character)
 			fmt.Printf("-- PatchCharacter --\n&s", character)
-			
+
 			if character.IsAI != nil {
 				localCharacters[index].IsAI = character.IsAI
 				if *localCharacters[index].IsAI == false {
@@ -145,13 +143,13 @@ func PatchCharacter(w http.ResponseWriter, r *http.Request) {
 				}
 				fmt.Printf("-- Updated IsAi --%t\n", character.IsAI)
 			}
-			
+
 			if character.Position != nil {
 				localCharacters[index].TargetPosition = character.Position
 				fmt.Printf("-- Updated Position --%s\n", character.Position)
-			}			
-        }
-    }	
+			}
+		}
+	}
 
 	charactersChannel <- localCharacters
 }
@@ -162,7 +160,7 @@ func PostCharacter(w http.ResponseWriter, r *http.Request) {
 	var character Character
 	character.ID = params["id"]
 	localCharacters = append(localCharacters, character)
-	json.NewEncoder(w).Encode(character)	
+	json.NewEncoder(w).Encode(character)
 	fmt.Printf("-- PostCharacter -- id: %s\n", params["id"])
 	charactersChannel <- localCharacters
 }
@@ -172,17 +170,17 @@ var charactersChannel chan []Character
 func main() {
 	charactersChannel = make(chan []Character)
 
-	go ReadDatabaseFile()
+	ReadDatabaseFile(&gCharacters)
 	go MoveCharactersGoroutine()
 	go PrintCharactersGoroutine()
-	charactersChannel <- gCharacters	
-	
-    router := mux.NewRouter()	
+	charactersChannel <- gCharacters
+
+    router := mux.NewRouter()
 	router.HandleFunc("/characters", GetCharacters).Methods("GET")
 	router.HandleFunc("/character/{id}", GetCharacter).Methods("GET")
 	router.HandleFunc("/character/{id}", PutCharacter).Methods("PUT")
 	router.HandleFunc("/character/{id}", PatchCharacter).Methods("PATCH")
-	router.HandleFunc("/character/{id}", PostCharacter).Methods("POST")	
-	
+	router.HandleFunc("/character/{id}", PostCharacter).Methods("POST")
+
     log.Fatal(http.ListenAndServe(":80", router))
 }
